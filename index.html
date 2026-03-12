@@ -21,6 +21,7 @@
           />
           <button class="btn btn-primary" id="load-btn">Load</button>
           <button class="btn btn-secondary" id="add-viewport-btn">+ Add viewport</button>
+          <button class="btn btn-secondary" id="reset-viewports-btn">⟲ Reset</button>
         </div>
         <div class="sync-status" id="sync-status" title="Scroll synchronisation status"></div>
       </header>
@@ -28,6 +29,10 @@
       <main id="viewports-container">
         <!-- Viewport columns are injected here by JS -->
       </main>
+
+      <div id="bottom-scrollbar" class="bottom-scrollbar" aria-label="Horizontal viewport scroll">
+        <div id="bottom-scrollbar-content" class="bottom-scrollbar-content"></div>
+      </div>
     </div>
 
     <script type="module" src="/src/main.js"></script>

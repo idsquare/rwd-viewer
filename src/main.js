@@ -13,8 +13,9 @@ const BREAKPOINTS = [
   { name: 'Tablet',    width: 768,  height: 1024 },
   { name: 'Laptop',    width: 1024, height: 768  },
   { name: 'Laptop L',  width: 1440, height: 900  },
+  { name: 'Laptop L',  width: 1920, height: 1080 },
   { name: '4K',        width: 2560, height: 1440 },
-  { name: 'Custom',    width: null, height: null  },
+  { name: 'Custom',    width: null, height: null },
 ]
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -30,13 +31,19 @@ let syncTimer       = null
 const urlInput          = document.getElementById('url-input')
 const loadBtn           = document.getElementById('load-btn')
 const addViewportBtn    = document.getElementById('add-viewport-btn')
+const resetViewportsBtn = document.getElementById('reset-viewports-btn')
 const viewportsContainer = document.getElementById('viewports-container')
 const syncStatusEl      = document.getElementById('sync-status')
+const bottomScrollbarEl = document.getElementById('bottom-scrollbar')
+const bottomScrollbarContentEl = document.getElementById('bottom-scrollbar-content')
+
+let isHorizontalSyncing = false
 
 // ─── Event wiring ─────────────────────────────────────────────────────────────
 
 loadBtn.addEventListener('click', loadUrl)
 addViewportBtn.addEventListener('click', () => addViewport())
+resetViewportsBtn.addEventListener('click', resetViewports)
 
 urlInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') loadUrl()
@@ -44,10 +51,12 @@ urlInput.addEventListener('keydown', (e) => {
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
+
+initUrlFromQueryParam()
+initBottomScrollbar()
 addViewport('Mobile M')
 addViewport('Tablet')
 addViewport('Laptop')
-
 // ─── Core functions ───────────────────────────────────────────────────────────
 
 function loadUrl () {
@@ -62,8 +71,40 @@ function loadUrl () {
 
   currentUrl = url
   viewports.forEach((vp) => {
-    if (vp.iframe) vp.iframe.src = currentUrl
+    if (!vp.iframe) return
+
+    // The startup placeholder uses srcdoc; remove it so src navigation can occur.
+    vp.iframe.removeAttribute('srcdoc')
+    vp.iframe.src = currentUrl
   })
+}
+
+function initUrlFromQueryParam () {
+  const params = new URLSearchParams(window.location.search)
+  const urlParam = params.get('url')
+  if (!urlParam) return
+
+  const prefillUrl = urlParam.trim()
+  if (!prefillUrl) return
+
+  urlInput.value = prefillUrl
+}
+
+function resetViewports () {
+  // Remove all viewports
+  viewports.forEach((vp) => {
+    const el = document.getElementById(`vp-${vp.id}`)
+    if (el) el.remove()
+  })
+  viewports = []
+  viewportIdSeq = 0
+
+  // Add the three default ones
+  addViewport('Mobile M')
+  addViewport('Tablet')
+  addViewport('Laptop')
+  updateSyncStatus()
+  updateBottomScrollbar()
 }
 
 function addViewport (presetName = 'Mobile M') {
@@ -84,6 +125,7 @@ function addViewport (presetName = 'Mobile M') {
   viewports.push(vp)
   renderViewport(vp)
   updateSyncStatus()
+  updateBottomScrollbar()
 }
 
 function removeViewport (id) {
@@ -91,6 +133,7 @@ function removeViewport (id) {
   const el = document.getElementById(`vp-${id}`)
   if (el) el.remove()
   updateSyncStatus()
+  updateBottomScrollbar()
 }
 
 // ─── Viewport rendering ───────────────────────────────────────────────────────
@@ -125,7 +168,7 @@ function renderViewport (vp) {
       <iframe
         id="vp-iframe-${vp.id}"
         class="viewport-frame"
-        style="width:${vp.width}px"
+        style="width:${vp.width}px;height:${vp.height}px"
         title="${vp.name} viewport"
         loading="lazy"
         src="${currentUrl || 'about:blank'}"
@@ -191,6 +234,47 @@ function applyViewportSize (vp) {
   if (vp.iframe) {
     vp.iframe.style.width  = `${vp.width}px`
     vp.iframe.style.height = `${vp.height}px`
+  }
+
+  updateBottomScrollbar()
+}
+
+function initBottomScrollbar () {
+  if (!bottomScrollbarEl || !bottomScrollbarContentEl) return
+
+  viewportsContainer.addEventListener('scroll', () => {
+    if (isHorizontalSyncing) return
+    isHorizontalSyncing = true
+    bottomScrollbarEl.scrollLeft = viewportsContainer.scrollLeft
+    isHorizontalSyncing = false
+  })
+
+  bottomScrollbarEl.addEventListener('scroll', () => {
+    if (isHorizontalSyncing) return
+    isHorizontalSyncing = true
+    viewportsContainer.scrollLeft = bottomScrollbarEl.scrollLeft
+    isHorizontalSyncing = false
+  })
+
+  window.addEventListener('resize', updateBottomScrollbar)
+  requestAnimationFrame(updateBottomScrollbar)
+}
+
+function updateBottomScrollbar () {
+  if (!bottomScrollbarEl || !bottomScrollbarContentEl) return
+
+  const contentWidth = viewportsContainer.scrollWidth
+  const viewportWidth = viewportsContainer.clientWidth
+
+  bottomScrollbarContentEl.style.width = `${contentWidth}px`
+
+  if (contentWidth > viewportWidth) {
+    bottomScrollbarEl.classList.remove('hidden')
+    bottomScrollbarEl.scrollLeft = viewportsContainer.scrollLeft
+  } else {
+    bottomScrollbarEl.classList.add('hidden')
+    bottomScrollbarEl.scrollLeft = 0
+    viewportsContainer.scrollLeft = 0
   }
 }
 

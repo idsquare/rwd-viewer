@@ -25,7 +25,8 @@
 
   --header-h:   52px;
   --toolbar-h:  42px;
-  --frame-h:    calc(100vh - var(--header-h) - var(--toolbar-h));
+  --bottom-scrollbar-h: 14px;
+  --frame-h:    calc(100vh - var(--header-h) - var(--toolbar-h) - var(--bottom-scrollbar-h));
 
   --radius:  6px;
   --radius-s: 4px;
@@ -166,9 +167,27 @@ html, body {
   display: flex;
   overflow-x: auto;
   overflow-y: hidden;
-  gap: 1px;
+  gap: .3rem;
   background: var(--clr-border);
   min-height: 0;
+
+}
+
+.bottom-scrollbar {
+  flex-shrink: 0;
+  height: var(--bottom-scrollbar-h);
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--clr-surface);
+  border-top: 1px solid var(--clr-border);
+}
+
+.bottom-scrollbar.hidden {
+  display: none;
+}
+
+.bottom-scrollbar-content {
+  height: 1px;
 }
 
 /* ── Single viewport column ─────────────────────────────────── */
@@ -289,7 +308,6 @@ html, body {
 .viewport-frame {
   display: block;
   border: none;
-  height: var(--frame-h);
   background: #fff;
 }
 

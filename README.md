@@ -29,6 +29,16 @@ npm run build    # production build → dist/
 npm run preview  # preview the production build locally
 ```
 
+### URL query parameter
+
+You can pre-fill the URL input with a query parameter:
+
+```text
+http://localhost:5173/?url=https%3A%2F%2Fexample.com
+```
+
+This only fills the input field. Click **Load** (or press `Enter`) to load the page in all viewports.
+
 ---
 
 ## Breakpoints

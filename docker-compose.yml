@@ -1,0 +1,10 @@
+services:
+  rwd-viewer:
+    image: idsquare/rwd-viewer:${VERSION:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rwd-viewer
+    ports:
+      - "8080:80"
+    restart: unless-stopped
